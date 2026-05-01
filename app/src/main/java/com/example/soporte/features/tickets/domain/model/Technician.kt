@@ -7,4 +7,5 @@ data class Technician(
     val fullName: String?,
     val typeDescription: String?,
     val supportDepartmentDescription: String?,
+    val isActive: Boolean? = null,
 )

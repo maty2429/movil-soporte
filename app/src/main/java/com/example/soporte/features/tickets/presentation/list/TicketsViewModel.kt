@@ -98,6 +98,18 @@ class TicketsViewModel(
     }
 
     private fun loadTechnicianAndTickets() {
+        sessionManager.technician.value?.let { technician ->
+            _state.update {
+                it.copy(
+                    technician = technician,
+                    isLoadingTechnician = false,
+                    error = null,
+                )
+            }
+            loadTickets()
+            return
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(isLoadingTechnician = true, error = null) }
 

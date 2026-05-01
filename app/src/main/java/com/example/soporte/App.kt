@@ -7,6 +7,7 @@ import com.example.soporte.di.appModule
 import com.example.soporte.features.auth.di.authModule
 import com.example.soporte.features.profile.di.profileModule
 import com.example.soporte.features.tickets.di.ticketsModule
+import com.example.soporte.features.transfers.di.transfersModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -23,6 +24,7 @@ class App : Application() {
                 authModule,
                 profileModule,
                 ticketsModule,
+                transfersModule,
             )
         }
     }

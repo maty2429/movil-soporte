@@ -34,6 +34,15 @@ fun AppNavHost() {
                 onTicketClick = { ticketId ->
                     navController.navigate(TicketDetailRoute(ticketId))
                 },
+                onTransferTicketClick = { ticketId, transferId, isReceivedTransfer ->
+                    navController.navigate(
+                        TicketDetailRoute(
+                            idTicket = ticketId,
+                            idTraspaso = transferId,
+                            isReceivedTransfer = isReceivedTransfer,
+                        ),
+                    )
+                },
                 onLogout = {
                     navController.navigate(LoginRoute) {
                         popUpTo(MainRoute) {
@@ -45,9 +54,11 @@ fun AppNavHost() {
         }
 
         composable<TicketDetailRoute> {
-            val ticketId = it.toRoute<TicketDetailRoute>().idTicket
+            val route = it.toRoute<TicketDetailRoute>()
             TicketDetailScreen(
-                ticketId = ticketId,
+                ticketId = route.idTicket,
+                transferId = route.idTraspaso,
+                isReceivedTransfer = route.isReceivedTransfer,
                 onBackClick = {
                     navController.popBackStack()
                 },

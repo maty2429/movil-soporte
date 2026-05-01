@@ -39,6 +39,7 @@ private enum class MainTab(
 @Composable
 fun MainScreen(
     onTicketClick: (Int) -> Unit,
+    onTransferTicketClick: (ticketId: Int, transferId: Int?, isReceivedTransfer: Boolean) -> Unit,
     onLogout: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(MainTab.Tickets) }
@@ -76,6 +77,7 @@ fun MainScreen(
 
             MainTab.Transfers -> TransfersScreen(
                 modifier = screenModifier,
+                onTransferClick = onTransferTicketClick,
             )
 
             MainTab.Inventory -> InventoryScreen(

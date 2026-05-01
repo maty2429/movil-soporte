@@ -11,4 +11,6 @@ object MainRoute
 @Serializable
 data class TicketDetailRoute(
     val idTicket: Int,
+    val idTraspaso: Int? = null,
+    val isReceivedTransfer: Boolean = false,
 )

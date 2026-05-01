@@ -100,6 +100,41 @@ data class TecnicoDto(
 )
 
 @Serializable
+data class HitoTicketDto(
+    val id: Int? = null,
+    @SerialName("id_ticket")
+    val idTicket: Int? = null,
+    @SerialName("id_tecnico")
+    val idTecnico: Int? = null,
+    @SerialName("id_tipo_hito")
+    val idTipoHito: Int? = null,
+    @SerialName("fecha_hito")
+    val fechaHito: String? = null,
+    @SerialName("hito_obs")
+    val hitoObs: String? = null,
+    val tecnico: TecnicoDto? = null,
+    @SerialName("tipo_hito")
+    val tipoHito: TipoHitoDto? = null,
+)
+
+@Serializable
+data class MotivoPausaDto(
+    val id: Int? = null,
+    @SerialName("motivo_pausa")
+    val motivoPausa: String? = null,
+    @SerialName("requiere_autorizacion")
+    val requiereAutorizacion: Boolean? = null,
+)
+
+@Serializable
+data class TipoHitoDto(
+    val id: Int? = null,
+    val descripcion: String? = null,
+    @SerialName("cod_tipo_hito")
+    val codTipoHito: String? = null,
+)
+
+@Serializable
 data class TipoTecnicoDto(
     val id: Int? = null,
     val descripcion: String? = null,

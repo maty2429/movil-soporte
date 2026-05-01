@@ -18,13 +18,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    viewModel: LoginViewModel = koinViewModel(),
 ) {
-    val password = remember { mutableStateOf("") }
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var passwordVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.isAuthenticated) {
+        if (state.isAuthenticated) {
+            onLoginSuccess()
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -102,7 +111,7 @@ fun LoginScreen(
                 )
                 
                 Text(
-                    text = "Ingresa tus credenciales para acceder al panel técnico.",
+                    text = "Ingresa el RUT del técnico para acceder al panel.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -111,21 +120,20 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = "1-9",
-                    onValueChange = {},
+                    value = state.rut,
+                    onValueChange = viewModel::onRutChange,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("RUT del Técnico") },
+                    label = { Text("RUT del Técnico con DV") },
                     leadingIcon = {
                         Icon(Icons.Default.Badge, contentDescription = null)
                     },
                     singleLine = true,
-                    readOnly = true,
                     shape = MaterialTheme.shapes.medium
                 )
 
                 OutlinedTextField(
-                    value = password.value,
-                    onValueChange = { password.value = it },
+                    value = state.password,
+                    onValueChange = viewModel::onPasswordChange,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Contraseña") },
                     leadingIcon = {
@@ -146,19 +154,37 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                state.error?.let { error ->
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Button(
-                    onClick = onLoginSuccess,
+                    onClick = viewModel::login,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
+                    enabled = !state.isLoading,
                     shape = MaterialTheme.shapes.medium,
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Text(
-                        text = "INICIAR SESIÓN",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(
+                            text = "INICIAR SESIÓN",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
                 
                 TextButton(onClick = { /* Handle forgot password */ }) {

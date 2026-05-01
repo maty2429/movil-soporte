@@ -1,10 +1,14 @@
 package com.example.soporte.features.tickets.data.mapper
 
 import com.example.soporte.features.tickets.data.dto.TecnicoDto
+import com.example.soporte.features.tickets.data.dto.HitoTicketDto
+import com.example.soporte.features.tickets.data.dto.MotivoPausaDto
 import com.example.soporte.features.tickets.data.dto.TicketDto
 import com.example.soporte.features.tickets.domain.model.FailureCatalog
+import com.example.soporte.features.tickets.domain.model.PauseReason
 import com.example.soporte.features.tickets.domain.model.Technician
 import com.example.soporte.features.tickets.domain.model.Ticket
+import com.example.soporte.features.tickets.domain.model.TicketMilestone
 import com.example.soporte.features.tickets.domain.model.TicketRequester
 import com.example.soporte.features.tickets.domain.model.TicketService
 import com.example.soporte.features.tickets.domain.model.TicketStatusInfo
@@ -17,6 +21,27 @@ fun TecnicoDto.toDomain(): Technician =
         fullName = nombreCompleto,
         typeDescription = tipoTecnico?.descripcion,
         supportDepartmentDescription = departamentoSoporte?.descripcion,
+        isActive = activo,
+    )
+
+fun HitoTicketDto.toDomain(): TicketMilestone =
+    TicketMilestone(
+        id = id,
+        ticketId = idTicket,
+        technicianId = idTecnico,
+        milestoneTypeId = idTipoHito,
+        date = fechaHito,
+        observation = hitoObs,
+        technicianName = tecnico?.nombreCompleto,
+        milestoneTypeCode = tipoHito?.codTipoHito,
+        milestoneTypeDescription = tipoHito?.descripcion,
+    )
+
+fun MotivoPausaDto.toDomain(): PauseReason =
+    PauseReason(
+        id = id ?: 0,
+        reason = motivoPausa.orEmpty(),
+        requiresAuthorization = requiereAutorizacion ?: true,
     )
 
 fun TicketDto.toDomain(): Ticket =
