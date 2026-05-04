@@ -8,4 +8,5 @@ data class Technician(
     val typeDescription: String?,
     val supportDepartmentDescription: String?,
     val isActive: Boolean? = null,
+    val shiftName: String? = null,
 )

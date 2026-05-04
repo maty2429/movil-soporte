@@ -82,7 +82,7 @@ class TicketsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(23 to 2), repository.markSeenRequests)
-        assertEquals(listOf(2 to "ASI", 2 to "ASI"), repository.ticketRequests)
+        assertEquals(listOf(2 to "ASI"), repository.ticketRequests)
         assertEquals(listOf(23), navigations)
     }
 
@@ -103,7 +103,7 @@ class TicketsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(23 to 2), repository.markSeenRequests)
-        assertEquals(listOf(2 to "ASI", 2 to "ASI"), repository.ticketRequests)
+        assertEquals(listOf(2 to "ASI"), repository.ticketRequests)
         assertEquals(listOf(23), navigations)
     }
 
@@ -125,7 +125,7 @@ class TicketsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(23 to 2), repository.markSeenRequests)
-        assertEquals(listOf(2 to "ASI", 2 to "ASI"), repository.ticketRequests)
+        assertEquals(listOf(2 to "ASI"), repository.ticketRequests)
         assertEquals(listOf(23, 23), navigations)
     }
 
@@ -145,7 +145,7 @@ class TicketsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(23 to 2), repository.markSeenRequests)
-        assertEquals(listOf(2 to "ASI", 2 to "ASI"), repository.ticketRequests)
+        assertEquals(listOf(2 to "ASI"), repository.ticketRequests)
         assertEquals(listOf(23), navigations)
     }
 
@@ -153,16 +153,12 @@ class TicketsViewModelTest {
     fun `al seleccionar tickets no ASI navega sin marcar visto`() = runTest(mainDispatcherRule.testDispatcher) {
         listOf("VITEC", "PRO", "PAU", "TER").forEachIndexed { index, status ->
             val ticketId = 24 + index
-            val repository = FakeTicketsRepository().apply {
-                ticketsByStatus["ASI"] = Result.success(
-                    listOf(ticket(id = ticketId, number = "$status-26", status = status)),
-                )
-            }
+            val repository = FakeTicketsRepository()
             val viewModel = viewModel(repository, SessionManager())
             advanceUntilIdle()
             val navigations = mutableListOf<Int>()
 
-            viewModel.onTicketSelected(viewModel.state.value.tickets.single()) { navigations += it }
+            viewModel.onTicketSelected(ticket(id = ticketId, number = "$status-26", status = status)) { navigations += it }
             advanceUntilIdle()
 
             assertEquals(emptyList<Pair<Int, Int>>(), repository.markSeenRequests)

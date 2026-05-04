@@ -9,6 +9,9 @@ object LoginRoute
 object MainRoute
 
 @Serializable
+object AutoAssignedTicketRoute
+
+@Serializable
 data class TicketDetailRoute(
     val idTicket: Int,
     val idTraspaso: Int? = null,

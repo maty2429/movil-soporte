@@ -84,14 +84,14 @@ class TicketsViewModel(
         if (!seenMarkInFlight.add(ticketId)) return
 
         viewModelScope.launch {
-            runCatching {
-                markTicketAsSeen(
-                    ticketId = ticketId,
-                    technicianId = technicianId,
-                )
-            }
+            val result = markTicketAsSeen(
+                ticketId = ticketId,
+                technicianId = technicianId,
+            )
             seenMarkInFlight.remove(ticketId)
-            seenMarkDone.add(ticketId)
+            result.onSuccess {
+                seenMarkDone.add(ticketId)
+            }
             // Removed manual loadTickets() as the repository flow will update us
             onNavigate(ticketId)
         }

@@ -1,9 +1,14 @@
 package com.example.soporte.core.network
 
 import com.example.soporte.features.tickets.data.dto.TecnicoDto
+import com.example.soporte.features.tickets.data.dto.CatalogoFallaDto
 import com.example.soporte.features.tickets.data.dto.HitoTicketDto
 import com.example.soporte.features.tickets.data.dto.MotivoPausaDto
+import com.example.soporte.features.tickets.data.dto.NivelPrioridadDto
+import com.example.soporte.features.tickets.data.dto.ServicioDto
+import com.example.soporte.features.tickets.data.dto.SolicitanteDto
 import com.example.soporte.features.tickets.data.dto.TicketDto
+import com.example.soporte.features.tickets.data.dto.TipoTicketDto
 import com.example.soporte.features.transfers.data.dto.TransferSummaryDto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -27,6 +32,21 @@ class SoporteApiClient(
 
     suspend fun getAllTecnicos(): List<TecnicoDto> =
         httpClient.get("$baseUrl/tecnicos/").body()
+
+    suspend fun getSolicitanteByRut(rut: String): SolicitanteDto =
+        httpClient.get("$baseUrl/solicitantes/rut/$rut").body()
+
+    suspend fun getServices(): List<ServicioDto> =
+        httpClient.get("$baseUrl/mantenedores/servicios").body<List<ServicioDto>?>().orEmpty()
+
+    suspend fun getTicketTypes(): List<TipoTicketDto> =
+        httpClient.get("$baseUrl/mantenedores/tipo-ticket").body<List<TipoTicketDto>?>().orEmpty()
+
+    suspend fun getPriorityLevels(): List<NivelPrioridadDto> =
+        httpClient.get("$baseUrl/mantenedores/niveles-prioridad").body<List<NivelPrioridadDto>?>().orEmpty()
+
+    suspend fun getFailureCatalogs(): List<CatalogoFallaDto> =
+        httpClient.get("$baseUrl/mantenedores/catalogo-fallas").body<List<CatalogoFallaDto>?>().orEmpty()
 
     suspend fun getPauseReasons(): List<MotivoPausaDto> =
         httpClient.get("$baseUrl/mantenedores/motivos-pausa").body<List<MotivoPausaDto>?>().orEmpty()
@@ -155,6 +175,37 @@ class SoporteApiClient(
         httpClient.patch("$baseUrl/pausas-ticket/finalizar/$ticketId")
     }
 
+    suspend fun createAutoAssignedTicket(
+        requesterId: Int,
+        serviceId: Int,
+        ticketTypeId: Int,
+        priorityLevelId: Int,
+        departmentCode: String,
+        assignedTechnicianId: Int,
+        failureCatalogId: Int,
+        isCritical: Boolean,
+        reportedFailure: String,
+        locationObservation: String,
+    ) {
+        httpClient.post("$baseUrl/ticket/auto-asignado") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                AutoAssignedTicketRequest(
+                    requesterId = requesterId,
+                    serviceId = serviceId,
+                    ticketTypeId = ticketTypeId,
+                    priorityLevelId = priorityLevelId,
+                    departmentCode = departmentCode,
+                    assignedTechnicianId = assignedTechnicianId,
+                    failureCatalogId = failureCatalogId,
+                    isCritical = isCritical,
+                    reportedFailure = reportedFailure,
+                    locationObservation = locationObservation,
+                ),
+            )
+        }
+    }
+
     suspend fun getReceivedTransfers(technicianId: Int): List<TransferSummaryDto> =
         httpClient.get("$baseUrl/ticket-tecnico/traspasos") {
             parameter("cod_estado", PENDING_TRANSFER_STATUS)
@@ -232,4 +283,28 @@ private data class TicketPauseRequest(
     val technicianId: Int,
     @SerialName("id_motivo_pausa")
     val pauseReasonId: Int,
+)
+
+@Serializable
+private data class AutoAssignedTicketRequest(
+    @SerialName("id_solicitante")
+    val requesterId: Int,
+    @SerialName("id_servicio")
+    val serviceId: Int,
+    @SerialName("id_tipo_ticket")
+    val ticketTypeId: Int,
+    @SerialName("id_nivel_prioridad")
+    val priorityLevelId: Int,
+    @SerialName("cod_departamento")
+    val departmentCode: String,
+    @SerialName("id_tecnico_asignado")
+    val assignedTechnicianId: Int,
+    @SerialName("id_catalogo_falla")
+    val failureCatalogId: Int,
+    @SerialName("critico")
+    val isCritical: Boolean,
+    @SerialName("detalle_falla_reportada")
+    val reportedFailure: String,
+    @SerialName("ubicacion_obs")
+    val locationObservation: String,
 )

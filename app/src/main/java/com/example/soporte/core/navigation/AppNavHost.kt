@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.soporte.features.auth.presentation.login.LoginScreen
 import com.example.soporte.features.main.presentation.MainScreen
+import com.example.soporte.features.profile.presentation.autoassigned.AutoAssignedTicketScreen
 import com.example.soporte.features.tickets.presentation.detail.TicketDetailScreen
 
 @Composable
@@ -43,6 +44,9 @@ fun AppNavHost() {
                         ),
                     )
                 },
+                onCreateAutoAssignedTicketClick = {
+                    navController.navigate(AutoAssignedTicketRoute)
+                },
                 onLogout = {
                     navController.navigate(LoginRoute) {
                         popUpTo(MainRoute) {
@@ -50,6 +54,14 @@ fun AppNavHost() {
                         }
                     }
                 }
+            )
+        }
+
+        composable<AutoAssignedTicketRoute> {
+            AutoAssignedTicketScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
             )
         }
 

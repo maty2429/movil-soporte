@@ -22,6 +22,7 @@ fun TecnicoDto.toDomain(): Technician =
         typeDescription = tipoTecnico?.descripcion,
         supportDepartmentDescription = departamentoSoporte?.descripcion,
         isActive = activo,
+        shiftName = tecnicoTurno?.tipoTurno?.nombre,
     )
 
 fun HitoTicketDto.toDomain(): TicketMilestone =

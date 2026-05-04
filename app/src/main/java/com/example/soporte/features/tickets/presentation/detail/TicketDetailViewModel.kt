@@ -11,10 +11,10 @@ import com.example.soporte.features.tickets.domain.usecase.GetPauseReasonsUseCas
 import com.example.soporte.features.tickets.domain.usecase.GetTicketDetailUseCase
 import com.example.soporte.features.tickets.domain.usecase.GetTicketMilestonesUseCase
 import com.example.soporte.features.tickets.domain.usecase.GetTransferTechniciansUseCase
+import com.example.soporte.features.tickets.domain.usecase.PauseTicketUseCase
 import com.example.soporte.features.tickets.domain.usecase.RespondTransferUseCase
 import com.example.soporte.features.tickets.domain.usecase.StartTicketUseCase
 import com.example.soporte.features.tickets.domain.usecase.TransferTicketUseCase
-import com.example.soporte.features.tickets.domain.usecase.PauseTicketUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -80,24 +80,57 @@ class TicketDetailViewModel(
                 )
             }
 
-            getTicketDetail(ticketId)
-                .onSuccess { ticket ->
-                    _state.update {
-                        it.copy(
-                            ticket = ticket,
-                            isLoading = false,
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = error.message ?: "No se pudo cargar el ticket",
-                        )
-                    }
-                }
+            fetchTicketDetail(ticketId)
         }
+    }
+
+    private suspend fun refreshTicket(ticketId: Int) {
+        currentTicketId = ticketId
+        _state.update {
+            it.copy(
+                isLoading = true,
+                error = null,
+            )
+        }
+        fetchTicketDetail(ticketId)
+    }
+
+    private suspend fun fetchTicketDetail(ticketId: Int) {
+        getTicketDetail(ticketId)
+            .onSuccess { ticket ->
+                _state.update {
+                    it.copy(
+                        ticket = ticket,
+                        isLoading = false,
+                    )
+                }
+            }
+            .onFailure { error ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = error.message ?: "No se pudo cargar el ticket",
+                    )
+                }
+            }
+    }
+
+    private fun ticketIdForStatus(status: TicketStatus): Int? {
+        val ticket = state.value.ticket ?: return null
+        val ticketId = ticket.id ?: return null
+        if (ticket.status.type != status) return null
+        return ticketId
+    }
+
+    private fun currentTicketIdFromState(): Int? =
+        state.value.ticket?.id
+
+    private fun technicianIdOrSetError(setError: (String) -> Unit): Int? {
+        val technicianId = sessionManager.technician.value?.id
+        if (technicianId == null) {
+            setError(NO_TECHNICIAN_ID_ERROR)
+        }
+        return technicianId
     }
 
     fun onAcceptTransferClick(onSuccess: () -> Unit) {
@@ -116,11 +149,9 @@ class TicketDetailViewModel(
         if (!state.value.canRespondToTransfer) return
         if (transferResponseInFlight) return
 
-        val technicianId = sessionManager.technician.value?.id
-        if (technicianId == null) {
-            _state.update { it.copy(transferResponseError = "El tecnico no tiene ID asociado") }
-            return
-        }
+        val technicianId = technicianIdOrSetError { message ->
+            _state.update { it.copy(transferResponseError = message) }
+        } ?: return
 
         transferResponseInFlight = true
         viewModelScope.launch {
@@ -170,17 +201,12 @@ class TicketDetailViewModel(
     }
 
     fun onStartTicketClick() {
-        val ticket = state.value.ticket ?: return
-        val ticketId = ticket.id ?: return
-
-        if (ticket.status.type != TicketStatus.SeenByTechnician) return
+        val ticketId = ticketIdForStatus(TicketStatus.SeenByTechnician) ?: return
         if (startInFlight) return
 
-        val technicianId = sessionManager.technician.value?.id
-        if (technicianId == null) {
-            _state.update { it.copy(error = "El tecnico no tiene ID asociado") }
-            return
-        }
+        val technicianId = technicianIdOrSetError { message ->
+            _state.update { it.copy(error = message) }
+        } ?: return
 
         startInFlight = true
         viewModelScope.launch {
@@ -191,7 +217,7 @@ class TicketDetailViewModel(
                 technicianId = technicianId,
             )
                 .onSuccess {
-                    loadTicket(ticketId)
+                    refreshTicket(ticketId)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -207,8 +233,7 @@ class TicketDetailViewModel(
     }
 
     fun onMilestoneClick() {
-        val ticket = state.value.ticket ?: return
-        if (ticket.status.type != TicketStatus.InProgress) return
+        if (ticketIdForStatus(TicketStatus.InProgress) == null) return
 
         _state.update {
             it.copy(
@@ -240,7 +265,7 @@ class TicketDetailViewModel(
     }
 
     fun onMilestonesClick() {
-        val ticketId = state.value.ticket?.id ?: return
+        val ticketId = currentTicketIdFromState() ?: return
 
         _state.update {
             it.copy(
@@ -283,11 +308,9 @@ class TicketDetailViewModel(
     }
 
     fun onTransferClick() {
-        val ticket = state.value.ticket ?: return
-        if (ticket.status.type != TicketStatus.InProgress) return
+        if (ticketIdForStatus(TicketStatus.InProgress) == null) return
 
-        val originTechnicianId = sessionManager.technician.value?.id
-        if (originTechnicianId == null) {
+        val originTechnicianId = technicianIdOrSetError { message ->
             _state.update {
                 it.copy(
                     isTransferDialogVisible = true,
@@ -295,11 +318,10 @@ class TicketDetailViewModel(
                     transferTechnicians = emptyList(),
                     selectedTransferTechnicianId = null,
                     transferReason = "",
-                    transferError = "El tecnico no tiene ID asociado",
+                    transferError = message,
                 )
             }
-            return
-        }
+        } ?: return
 
         _state.update {
             it.copy(
@@ -335,8 +357,7 @@ class TicketDetailViewModel(
     }
 
     fun onPauseClick() {
-        val ticket = state.value.ticket ?: return
-        if (ticket.status.type != TicketStatus.InProgress) return
+        if (ticketIdForStatus(TicketStatus.InProgress) == null) return
 
         _state.update {
             it.copy(
@@ -392,24 +413,18 @@ class TicketDetailViewModel(
     }
 
     fun onCreatePauseClick() {
-        val ticket = state.value.ticket ?: return
-        val ticketId = ticket.id ?: return
-        val technicianId = sessionManager.technician.value?.id
+        val ticketId = ticketIdForStatus(TicketStatus.InProgress) ?: return
         val pauseReasonId = state.value.selectedPauseReasonId
 
-        if (ticket.status.type != TicketStatus.InProgress) return
         if (pauseInFlight) return
 
-        when {
-            technicianId == null -> {
-                _state.update { it.copy(pauseError = "El tecnico no tiene ID asociado") }
-                return
-            }
+        val technicianId = technicianIdOrSetError { message ->
+            _state.update { it.copy(pauseError = message) }
+        } ?: return
 
-            pauseReasonId == null -> {
-                _state.update { it.copy(pauseError = "Selecciona un motivo de pausa") }
-                return
-            }
+        if (pauseReasonId == null) {
+            _state.update { it.copy(pauseError = "Selecciona un motivo de pausa") }
+            return
         }
 
         pauseInFlight = true
@@ -429,7 +444,7 @@ class TicketDetailViewModel(
                             pauseError = null,
                         )
                     }
-                    loadTicket(ticketId)
+                    refreshTicket(ticketId)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -445,10 +460,7 @@ class TicketDetailViewModel(
     }
 
     fun onFinishPauseClick() {
-        val ticket = state.value.ticket ?: return
-        val ticketId = ticket.id ?: return
-
-        if (ticket.status.type != TicketStatus.Paused) return
+        val ticketId = ticketIdForStatus(TicketStatus.Paused) ?: return
         if (finishPauseInFlight) return
 
         finishPauseInFlight = true
@@ -457,7 +469,7 @@ class TicketDetailViewModel(
 
             finishPause(ticketId)
                 .onSuccess {
-                    loadTicket(ticketId)
+                    refreshTicket(ticketId)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -504,21 +516,17 @@ class TicketDetailViewModel(
     }
 
     fun onCreateTransferClick() {
-        val ticket = state.value.ticket ?: return
-        val ticketId = ticket.id ?: return
-        val originTechnicianId = sessionManager.technician.value?.id
+        val ticketId = ticketIdForStatus(TicketStatus.InProgress) ?: return
         val destinationTechnicianId = state.value.selectedTransferTechnicianId
         val reason = state.value.transferReason.trim()
 
-        if (ticket.status.type != TicketStatus.InProgress) return
         if (transferInFlight) return
 
-        when {
-            originTechnicianId == null -> {
-                _state.update { it.copy(transferError = "El tecnico no tiene ID asociado") }
-                return
-            }
+        val originTechnicianId = technicianIdOrSetError { message ->
+            _state.update { it.copy(transferError = message) }
+        } ?: return
 
+        when {
             destinationTechnicianId == null -> {
                 _state.update { it.copy(transferError = "Selecciona un tecnico destino") }
                 return
@@ -549,7 +557,7 @@ class TicketDetailViewModel(
                             transferError = null,
                         )
                     }
-                    loadTicket(ticketId)
+                    refreshTicket(ticketId)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -565,11 +573,9 @@ class TicketDetailViewModel(
     }
 
     fun onCreateMilestoneClick() {
-        val ticket = state.value.ticket ?: return
-        val ticketId = ticket.id ?: return
+        val ticketId = ticketIdForStatus(TicketStatus.InProgress) ?: return
         val observation = state.value.milestoneObservation.trim()
 
-        if (ticket.status.type != TicketStatus.InProgress) return
         if (milestoneInFlight) return
 
         if (observation.isBlank()) {
@@ -577,11 +583,9 @@ class TicketDetailViewModel(
             return
         }
 
-        val technicianId = sessionManager.technician.value?.id
-        if (technicianId == null) {
-            _state.update { it.copy(milestoneError = "El tecnico no tiene ID asociado") }
-            return
-        }
+        val technicianId = technicianIdOrSetError { message ->
+            _state.update { it.copy(milestoneError = message) }
+        } ?: return
 
         milestoneInFlight = true
         viewModelScope.launch {
@@ -617,5 +621,6 @@ class TicketDetailViewModel(
     private companion object {
         const val MAX_MILESTONE_OBSERVATION_LENGTH = 500
         const val MAX_TRANSFER_REASON_LENGTH = 100
+        const val NO_TECHNICIAN_ID_ERROR = "El tecnico no tiene ID asociado"
     }
 }

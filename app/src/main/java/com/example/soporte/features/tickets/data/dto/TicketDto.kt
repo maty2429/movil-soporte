@@ -54,6 +54,27 @@ data class TicketDto(
 )
 
 @Serializable
+data class TecnicoTurnoDto(
+    val id: Int? = null,
+    @SerialName("id_tecnico")
+    val idTecnico: Int? = null,
+    @SerialName("id_tipo_turno")
+    val idTipoTurno: Int? = null,
+    @SerialName("created_at")
+    val createdAt: String? = null,
+    @SerialName("tipo_turno")
+    val tipoTurno: TipoTurnoDto? = null,
+)
+
+@Serializable
+data class TipoTurnoDto(
+    val id: Int? = null,
+    val nombre: String? = null,
+    val descripcion: String? = null,
+    val estado: Boolean? = null,
+)
+
+@Serializable
 data class ServicioDto(
     val id: Int? = null,
     @SerialName("id_nivel_prioridad_default")
@@ -97,6 +118,8 @@ data class TecnicoDto(
     val tipoTecnico: TipoTecnicoDto? = null,
     @SerialName("departamento_soporte")
     val departamentoSoporte: DepartamentoSoporteDto? = null,
+    @SerialName("tecnico_turno")
+    val tecnicoTurno: TecnicoTurnoDto? = null,
 )
 
 @Serializable

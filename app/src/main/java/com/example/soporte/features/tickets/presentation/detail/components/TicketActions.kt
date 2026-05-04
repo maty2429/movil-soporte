@@ -9,14 +9,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AddLocation
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -123,54 +122,68 @@ fun TicketActions(
                     containerColor = Color(0xFF4CAF50),
                     contentColor = Color.White,
                     modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.Flag,
+                    icon = Icons.AutoMirrored.Filled.ArrowForward,
                 )
             }
 
-            "PAU" -> Surface(
-                color = Color(0xFFFFECB3),
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = "El ticket se encuentra pausado.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF5D4037),
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                    )
-
-                    finishPauseError?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-
-                    Button(
-                        onClick = onFinishPauseClick,
-                        enabled = !isFinishingPause,
-                        modifier = Modifier.fillMaxWidth(),
+            "PAU" -> {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Surface(
+                        color = Color(0xFFFFECB3), // Fondo ámbar suave
                         shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth(),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD54F))
                     ) {
-                        if (isFinishingPause) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        } else {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null)
-                            Text("Finalizar la pausa")
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Pause,
+                                    contentDescription = null,
+                                    tint = Color(0xFF5D4037),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = "Trabajo en Pausa",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF5D4037)
+                                    )
+                                    Text(
+                                        text = "El tiempo de resolución está detenido.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF5D4037).copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+
+                            finishPauseError?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
+
+                    SwipeToActionButton(
+                        text = "DESLIZA PARA REANUDAR",
+                        onAction = onFinishPauseClick,
+                        isLoading = isFinishingPause,
+                        containerColor = Color(0xFFFFB300), // Ámbar vibrante
+                        contentColor = Color.White,
+                        modifier = Modifier.fillMaxWidth(),
+                        icon = Icons.Default.PlayArrow
+                    )
                 }
             }
 

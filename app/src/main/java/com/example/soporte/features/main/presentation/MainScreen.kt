@@ -40,6 +40,7 @@ private enum class MainTab(
 fun MainScreen(
     onTicketClick: (Int) -> Unit,
     onTransferTicketClick: (ticketId: Int, transferId: Int?, isReceivedTransfer: Boolean) -> Unit,
+    onCreateAutoAssignedTicketClick: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(MainTab.Tickets) }
@@ -87,6 +88,7 @@ fun MainScreen(
             MainTab.Profile -> ProfileScreen(
                 modifier = screenModifier,
                 onLogout = onLogout,
+                onCreateAutoAssignedTicketClick = onCreateAutoAssignedTicketClick,
             )
         }
     }

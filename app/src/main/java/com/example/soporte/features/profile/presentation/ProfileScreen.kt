@@ -27,6 +27,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
+    onCreateAutoAssignedTicketClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
@@ -92,6 +93,23 @@ fun ProfileScreen(
                     label = "Departamento",
                     value = technician?.supportDepartmentDescription ?: "No informado"
                 )
+            }
+
+            InfoGroupCard(title = "Tickets") {
+                Button(
+                    onClick = onCreateAutoAssignedTicketClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "CREAR TICKET AUTOASIGNADO",
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
